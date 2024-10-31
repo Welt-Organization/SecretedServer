@@ -74,3 +74,16 @@ paperclip.properties
 
 test-plugin.settings.gradle.kts
 paper-api-generator.settings.gradle.kts
+
+*.json
+*.yml
+server.properties
+world
+world_nether
+world_the_end
+versions
+plugins
+libraries
+crash-reports
+config
+logs
