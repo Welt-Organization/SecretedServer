@@ -103,6 +103,7 @@ paperweight {
             "net.minecraft",
             "org.bukkit.craftbukkit",
             "org.spigotmc",
+            "org.welt",
         )
     }
 }

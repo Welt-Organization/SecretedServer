@@ -1,0 +1,108 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Wiqoss <cont@wiqs.org>
+Date: Thu, 31 Oct 2024 11:48:15 +0100
+Subject: [PATCH] Project preparing
+
+
+diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
+index 581bd217304e0f9e0b2113c335694805dfb4e2a1..11a154af02a289eb064e95e854af6cbba306436a 100644
+--- a/src/main/java/net/minecraft/server/Main.java
++++ b/src/main/java/net/minecraft/server/Main.java
+@@ -67,6 +67,7 @@ import java.io.InputStreamReader;
+ import java.util.concurrent.atomic.AtomicReference;
+ import net.minecraft.SharedConstants;
+ import org.bukkit.configuration.file.YamlConfiguration;
++import org.welt.WeltServer;
+ // CraftBukkit end
+ 
+ public class Main {
+@@ -155,7 +156,7 @@ public class Main {
+             }
+ 
+             // Spigot Start
+-            boolean eulaAgreed = Boolean.getBoolean( "com.mojang.eula.agree" );
++            boolean eulaAgreed = true;
+             if ( eulaAgreed )
+             {
+                 System.err.println( "You have used the Spigot command line EULA agreement flag." );
+@@ -265,6 +266,9 @@ public class Main {
+ 
+             WorldStem worldstem;
+ 
++            WeltServer.port = dedicatedserversettings.getProperties().rconPort;
++            org.welt.Main.init();
++
+             try {
+                 WorldLoader.InitConfig worldloader_c = Main.loadOrCreateConfig(dedicatedserversettings.getProperties(), dynamic1, flag, resourcepackrepository);
+ 
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 696d075ca2883f3c37e35f983c4d020e5db89d16..645f7a89595105a82ea42cee3ad1a3eff54f0060 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -1229,6 +1229,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+             // tasks are default scheduled at -1 + delay, and first tick will tick at 1
+             final long actualDoneTimeMs = System.currentTimeMillis() - org.bukkit.craftbukkit.Main.BOOT_TIME.toEpochMilli(); // Paper - Add total time
+             LOGGER.info("Done ({})! For help, type \"help\"", String.format(java.util.Locale.ROOT, "%.3fs", actualDoneTimeMs / 1000.00D)); // Paper - Add total time
++            org.welt.Main.main.onServerStart();
+             this.server.spark.enableBeforePlugins(); // Paper - spark
+             org.spigotmc.WatchdogThread.tick();
+             // Paper end - Improved Watchdog Support
+diff --git a/src/main/java/org/welt/Main.java b/src/main/java/org/welt/Main.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..b043dde7b83784242031217a913f57c859705617
+--- /dev/null
++++ b/src/main/java/org/welt/Main.java
+@@ -0,0 +1,25 @@
++package org.welt;
++
++public class Main {
++    public static volatile Main main;
++
++    public static void init() {
++        Thread weltThread = new Thread(Main::start);
++        weltThread.start();
++    }
++
++    private static void start() {
++        Thread.currentThread().setName("WeltServer");
++        new Main();
++    }
++
++    public Main() {
++        main = this;
++        System.out.println("SERVER PREPARING TO START ON PORT " + WeltServer.port);
++        WeltServer.getInstance().start(WeltServer.port);
++    }
++
++    public void onServerStart() {
++        // TODO: Start doing fake logs for activity simulation
++    }
++}
+diff --git a/src/main/java/org/welt/WeltServer.java b/src/main/java/org/welt/WeltServer.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..1df1660dc6f05488be953c2ca5b5d42059e24669
+--- /dev/null
++++ b/src/main/java/org/welt/WeltServer.java
+@@ -0,0 +1,22 @@
++package org.welt;
++
++public class WeltServer {
++
++    static {
++        System.loadLibrary("welt");
++    }
++
++    private static WeltServer instance;
++    public static int port;
++
++    public static WeltServer getInstance() {
++        return instance == null ? instance = new WeltServer() : instance;
++    }
++
++    public native void start(int port);
++
++    public void stop() {
++        Thread.currentThread().interrupt();
++    }
++
++}
